@@ -1,0 +1,33 @@
+@using Microsoft.AspNetCore.Identity
+@using TryHardForum.Models
+@using System.Security.Claims
+@using TryHardForum.Controllers
+@model AppUser
+
+@{
+    ViewBag.Title = "Профиль пользователя @User.Identity.Name";
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var userName = User.Identity.Name;
+    var userEmail = User.FindFirstValue(ClaimTypes.Email);
+}
+
+<p>Это личная страница пользователя @userName</p>
+
+<div>
+    <ul>
+        <li>ID: @userId</li>
+        <li>Имя: @userName</li>
+        <li>
+            <form asp-action="Delete" asp-route-id="@userId" method="post">
+                <button type="submit">
+                    Удалить
+                </button>
+            </form>
+        <li><a asp-controller="Account" asp-action="Edit" asp-route-id="@userId">Редачить УЗ</a></li>
+        <li><a asp-controller="Account" asp-action="ChangePassword" asp-route-id="@userId">Изменить пароль</a></li>
+    </ul>
+</div>
+
+
+
+

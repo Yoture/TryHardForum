@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+
+<html>
+    @await Html.PartialAsync("_Header")
+    @await Html.PartialAsync("_Navbar")
+    <body>
+        <div>
+            @RenderBody()
+        </div>
+    </body>
+    @await Html.PartialAsync("_Footer")
+</html>

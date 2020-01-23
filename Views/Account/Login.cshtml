@@ -1,0 +1,21 @@
+@model LoginViewModel
+
+@{
+    ViewBag.Title = "Вход";
+}
+
+<div asp-validation-summary="All"></div>
+
+<form method="post" asp-controller = "Account" asp-action="Login">
+    <input type="hidden" name="returnUrl" value="@ViewBag.returnUrl" />
+    <div>
+        <label asp-for="Email"></label>
+        <input asp-for="Email" />
+        <span asp-validation-for = "Email"></span>
+    </div>
+    <div>
+        <label asp-for="Password"></label>
+        <input asp-for="Password" />
+    </div>
+    <button type="submit">Войти</button>
+</form>

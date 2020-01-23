@@ -1,0 +1,31 @@
+@model RegisterViewModel
+
+@{
+    ViewBag.Title = "Регистрация нового пользователя";
+}
+
+<div asp-validation-summary="All"></div>
+<form method="post" asp-controller="Account" asp-action="Register">
+    <hr />
+    <div>
+        <label asp-for="UserName"></label></br>
+        <input asp-for="UserName" />
+        <span asp-validation-for="UserName"></span>
+    </div>
+    <div>
+        <label asp-for="Email"></label></br>
+        <input asp-for="Email"/>
+        <span asp-validation-for="Email"></span>
+    </div>
+    <div>
+        <label asp-for="Password"></label></br>
+        <input asp-for="Password" />
+        <span asp-validation-for="Password"></span>
+    </div>
+    <div>
+        <label asp-for="ConfirmPassword"></label></br>
+        <input asp-for="ConfirmPassword" />
+        <span asp-validation-for="ConfirmPassword"></span>
+    </div>
+    <button type="submit">Регистрация</button>
+</form>

@@ -1,9 +1,24 @@
-<DOCTYPE html>
-<html>
-    <head>
-        TryHardForum: Homepage
-    </head>
-    <body>
-        This is the body of the page.
-    </body>
-</html>
+@inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+
+@{
+    ViewBag.Title = "Home Page";
+}
+
+<p>Главная страница</p>
+
+<!--
+@if (User.Identity.IsAuthenticated)
+{
+    <p>@User.Identity.Name</p>
+
+    <form method="post" asp-controller="Account" asp-action="Logout">
+        <input type="submit" value="Выход" />
+    </form>
+}
+else
+{
+    <a asp-controller="Account" asp-action="Login">Вход</a>
+    <a asp-controller="Account" asp-action="Register">Регистрация</a>
+}
+-->
