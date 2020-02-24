@@ -1,0 +1,52 @@
+@model CreatePostModel
+
+<div>
+    <div>
+        <div>
+            New Post | @Model.TopicTitle
+            <!-- Возвращение к теме, в которой будет создано сообщение -->
+            <span>
+                <a asp-controller="Topic" asp-action="Index" asp-route-id="@Model.TopicId">
+                    Назад к @Model.TopicTitle
+                </a>
+            </span>
+        </div>
+    </div>
+    @if (!Context.User.Identity.IsAuthenticated)
+    {
+        <div>
+            <div>
+                <div>
+                    Вы должны быть 
+                    <a asp-controller="Account" asp-action="Register">
+                        зарегистрированным пользователем
+                    </a>
+                    чтобы создать новое сообщение.
+                </div>
+            </div>
+        </div>
+    }
+    @if (Context.User.Identity.IsAuthenticated)
+    {
+        <div>
+            <div>
+                <div>
+                    Вы размещаете это сообщение как <span>@Model.AuthorName</span>
+                </div>
+                <form asp-action="AddPost" method="post">
+                    <div asp-validation-summary="All"></div>
+                    <input type="hidden" asp-for="UserId" />
+                    <input type="hidden" asp-for="TopicTitle" />
+                    <input type="hidden" asp-for="TopicId" />
+                    <div>
+                        <label asp-for="Content">Сообщение</label>
+                        <textarea asp-for="Content" rows="20" placeholder="Напишите своё сообщение тут."></textarea>
+                        <span asp-validation-for="Content"></span>
+                    </div>
+                    <button type="submit" id="registerBtn" class="btn btn-submitPost">Submit Post</button>
+                    <!-- Привязка к определённому топику -->
+                </form>
+            </div>
+        </div>
+    }
+</div>

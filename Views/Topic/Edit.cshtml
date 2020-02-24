@@ -1,0 +1,22 @@
+<!-- Страница редактирования форума: названия и описания. -->
+
+@model EditTopicModel
+@{
+    ViewData["Title"] = "Редактировать тему";
+}
+
+<div>
+    <div>
+        <form asp-route-returnUrl="@TempData["ReturnUrl"]" method="post">
+            <div asp-validation-summary="All"></div>
+            <input type="hidden" asp-for="@Model.TopicId" />
+            <div>
+                <label asp-for="@Model.TopicTitle">Заголовок</label>
+                <input asp-for="@Model.TopicTitle" />
+            </div><br/>
+            <button type="submit">Сохранить</button>
+        </form>
+    </div>
+</div>
+
+@* запилить валидационные скрипты *@

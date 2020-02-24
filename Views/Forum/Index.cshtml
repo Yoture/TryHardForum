@@ -1,0 +1,69 @@
+@model ForumIndexModel
+@inject UserManager<AppUser> UserManager
+
+@{
+    var user = UserManager.FindByNameAsync(User.Identity.Name);
+    var isAdmin = user.Result.IsAdmin;
+}
+
+<div>
+    <div>
+        <div>
+            Обзор форумов
+        </div>
+        <div>
+            <p>Добро пожаловать на TryHardForum. Lorem Ipsum...</p>
+            @if (!Context.User.Identity.IsAuthenticated)
+            {
+                <span>
+                    Вы должны являться 
+                    <a asp-controller="Account" asp-action="Register">зарегистрированным пользователем</a>
+                    , для создания новых сообщений.
+                </span>
+            }
+            else
+            {
+                <p>Читайте ман перед тем как создавать новый пост.</p>
+            }
+            @if (isAdmin)
+            {
+                <!-- Должно отображаться, если форумов совсем нету -->
+                <span>Пора создать новый <a asp-controller="Forum" asp-action="Create">Форум</a>!</span>
+            }
+        </div>
+    </div>
+    <div>
+        <tbody>
+        @foreach (var forum in Model.ForumList)
+        {
+            <tr>
+                <td>
+                    <div>
+                        <a asp-controller="Forum" asp-action="Details" asp-route-id="@forum.Id">@forum.Title</a>
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        @forum.Description
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        @forum.NumberOfUsers Пользователей
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        <a asp-controller="Forum" asp-action="Edit" asp-route-id="@forum.Id">Редактировать</a>
+                    </div>
+                </td>
+                <td>
+                    <div>
+                        <a asp-controller="Forum" asp-action="Delete" asp-route-id="@forum.Id">Удалить</a>
+                    </div>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </div>
+</div>

@@ -1,31 +1,49 @@
-@model RegisterViewModel
+@model RegisterModel
 
 @{
+    Layout = "_SimpleLayout";
     ViewBag.Title = "Регистрация нового пользователя";
 }
 
-<div asp-validation-summary="All"></div>
-<form method="post" asp-controller="Account" asp-action="Register">
-    <hr />
+<div>
     <div>
-        <label asp-for="UserName"></label></br>
-        <input asp-for="UserName" />
-        <span asp-validation-for="UserName"></span>
+        <h1>Регистрация нового пользователя</h1>
+        <div>
+            <p>Зарегистрируйтесь, чтобы вы могли оставлять сообщения на форумах.</p>
+        </div>
     </div>
     <div>
-        <label asp-for="Email"></label></br>
-        <input asp-for="Email"/>
-        <span asp-validation-for="Email"></span>
+        <div>
+            <form method="post">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div>
+                    <label asp-for="Email">Электронная почта</label>
+                    <input asp-for="Email" />
+                    <span asp-validation-for="Email"></span>
+                </div>
+                <div>
+                    <label asp-for="UserName">Имя</label>
+                    <input asp-for="UserName" />
+                    <span asp-validation-for="UserName"></span>
+                </div>
+                <div>
+                    <label asp-for="Password">Пароль</label>
+                    <input asp-for="Password" />
+                    <span asp-validation-for="Password"></span>
+                </div>
+                <div>
+                    <label asp-for="ConfirmPassword">Подтверждение пароля</label>
+                    <input asp-for="ConfirmPassword" />
+                    <span asp-validation-for="ConfirmPassword"></span>
+                </div>
+                <button type="submit">Регистрация</button>
+            </form>
+        </div>
     </div>
-    <div>
-        <label asp-for="Password"></label></br>
-        <input asp-for="Password" />
-        <span asp-validation-for="Password"></span>
-    </div>
-    <div>
-        <label asp-for="ConfirmPassword"></label></br>
-        <input asp-for="ConfirmPassword" />
-        <span asp-validation-for="ConfirmPassword"></span>
-    </div>
-    <button type="submit">Регистрация</button>
-</form>
+</div>
+
+@*
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+*@

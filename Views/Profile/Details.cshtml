@@ -1,0 +1,71 @@
+@model ProfileModel
+@inject UserManager<AppUser> UserManager
+@inject SignInManager<AppUser> SignInManager
+
+@{
+    var user = UserManager.FindByNameAsync(User.Identity.Name);
+    var isAdmin = user.Result.IsAdmin;
+    @* Логика, позволяющая выбирать определённый макет в зависимости от условий *@
+    if (SignInManager.IsSignedIn(User) && @Model.UserId == UserManager.GetUserId(User))
+    {
+        Layout = "_AccountLayout";
+    }
+    else
+    {
+        Layout = "_MainLayout";
+    }
+}
+
+<div>
+    <div>
+        <div>
+            User Profile
+        </div>
+        @if (User.IsInRole("Admin"))
+        {
+            <form method="post" asp-controller="Profile" asp-action="Deactivate" asp-route-id="@Model.UserId">
+                <div>
+                    <button active="@Model.IsActive">Deactivate User</button>
+                </div>
+            </form>
+        }
+    </div>
+    @if (Context.User.Identity.IsAuthenticated)
+    {
+        <div>
+            <div>
+                @if (Context.User.Identity.Name == Model.UserName)
+                {
+                    <form method="post" enctype="multipart/form-data" asp-controller="Profile" asp-action="UploadProfileImage">
+                        <div>
+                            <label>
+                                Найти <input type="file" name="file">
+                            </label>
+                        </div>
+                        <button type="submit">Отправить</button>
+                    </form>
+                }
+            </div>
+            <div class="col-md-8">
+                <span id="userName">@Model.UserName</span> 
+                @if (@Model.IsAdmin)
+                {
+                    <span>Admin</span>
+                }
+                <span>Current Rating: @Model.UserRating</span>
+                <span>Email: @Model.Email</span>
+                <span>Member Since: @Model.MemberSince</span>
+                <span>Status: 
+                    @if (!Model.IsActive)
+                    {
+                        <span>Inactive</span>
+                    }
+                    else
+                    {
+                        <span>Active</span>
+                    }
+                </span>
+            </div>
+        </div>
+    }
+</div>

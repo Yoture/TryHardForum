@@ -1,0 +1,20 @@
+@model DeletePostModel
+<!-- Нужно ли это представление? -->
+
+<div class="container body-content">
+    @if (!Context.User.Identity.IsAuthenticated)
+    {
+        <div>
+            <div>Удаление сообщения</div>
+            <div>
+                <p>
+                    Вы уверены, что хотите удалить это сообщение?
+                </p>
+            </div>
+        </div>
+        <div>
+            <button>Подтвердить удаление</button>
+            <button>Отмена</button>
+        </div>
+    }
+</div>

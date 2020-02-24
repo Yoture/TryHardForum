@@ -1,0 +1,49 @@
+@model PostReplyModel
+<!-- должен быть частичным представлением -->
+
+<div>
+    <div>
+        <div>
+            Reply | @Model.PostTitle
+            <span>
+                <a asp-controller="Post" 
+                   asp-action="Index" 
+                   asp-route-id="@Model.PostId">
+            Back to Post
+            </a>
+            </span>
+        </div>
+    </div>
+    <div>
+        <div>
+            <h3>@Model.PostTitle</h3>
+            <p>@Model.PostContent</p>
+        </div>
+    </div>
+    <div class="row">
+        <div id="createReply">
+            <div class="authorBlock">
+                You're submitting this Reply as @Model.AuthorName
+            </div>
+            
+            <form asp-controller="Reply"
+                  asp-action="Create"
+                  method="post">
+                <div asp-validation-summary="All"></div>
+                <input type="hidden" asp-for="AuthorId"/>
+                <input type="hidden" asp-for="PostId"/>
+                <input type="hidden" asp-for="TopicId"/>
+                <input type="hidden" asp-for="TopicTitle"/>
+                <div>
+                    <label asp-for="ReplyContent">Reply:</label>
+                    <textarea 
+                        asp-for="ReplyContent"
+                        rows="20" 
+                        placeholder="Ваш ответ..."></textarea>
+                    <span asp-validation-for="ReplyContent"></span>
+                </div>
+                <button type="submit">Submit Reply</button>
+            </form>
+        </div>
+    </div>
+</div>

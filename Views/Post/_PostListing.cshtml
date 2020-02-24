@@ -1,0 +1,82 @@
+@model PostIndexModel
+<!-- Частичное представление каждого сообщения внутри темы! -->
+
+<div>
+    <div>
+        <div>
+            <span>
+                @Model.Title
+            </span>
+            <span>
+                <a asp-controller="Topic"
+                   asp-action="Index"
+                   asp-route-id="@Model.TopicId">
+                    Назад к @Model.TopicTitle
+                </a>
+            </span>
+        </div>
+    </div>
+
+    <div>
+        <div>
+            <a asp-controller="Profile" asp-action="Details" asp-route-id="@Model.AuthorId">
+                <strong>@Model.AuthorName</strong>
+            </a> (<span>@Model.AuthorRating</span>) <br />
+            <span>@Model.Created</span>
+            @if (@Model.IsAuthorAdmin)
+            {
+                <span>Admin</span>
+            }
+        </div>
+        <div>
+            <div>
+                @Html.Raw(@Model.PostContent)
+            </div>
+        </div>
+    </div>
+
+    <div></div>
+    @if (Context.User.Identity.IsAuthenticated)
+    {
+        <div>
+            <span><a asp-controller="Reply"
+                     asp-action="Create"
+                     asp-route-id="@Model.Id">
+                Ответ на сообщение
+            </a></span>
+        </div>
+    }
+    <!-- Если есть ответы -->
+    @if (Model.Replies.Any())
+    {
+        foreach (var reply in Model.Replies)
+                {
+            <div>
+                <div>
+                    <a asp-controller="Profile" asp-action="Details" asp-route-id="@reply.AuthorId">
+                        <strong>@reply.AuthorName</strong>
+                    </a> (<span>@reply.AuthorRating</span>) <br />
+                    @if (@reply.IsAuthorAdmin)
+                    {
+                        <div>Администратор</div>
+                        <br />
+                    }
+                    <span>@reply.Created</span>
+                </div>
+                <div>
+                    <div>
+                        @Html.Raw(@reply.ReplyContent)
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div>
+            <h3>
+                Ещё нет ответов к этому сообщению.<br />
+            </h3>
+        </div>
+    }
+</div>

@@ -1,0 +1,43 @@
+@model ManageIndexModel
+
+@{
+    Layout = "_AccountLayout";
+    ViewBag.Title = "Управление профилем пользователя";
+}
+
+<h4>@Model.UserName</h4>
+<div>
+    <div>
+        <form method="post">
+            <div asp-validation-summary="All"></div>
+            <div>
+                <!-- 
+                Переделать таким образом, чтобы почта и имя пользователя отображались рядом
+                без возможности изменения.
+                -->
+                <label asp-for="UserName">Имя:</label>
+                <input asp-for="UserName" disabled/>
+            </div><br/>
+            <div>
+                <label asp-for="Email">Электронная почта:</label>
+                @if (Model.IsEmailConfirmed)
+                {
+                    <div>
+                        <input asp-for="Email" />
+                        <span aria-hidden="true"></span>
+                    </div>
+                }
+                else
+                {
+                    <input asp-for="Email" />
+                    <button asp-action="SendVerificationEmail">Отправить письмо с подтверждением</button>
+                }
+                <span asp-validation-for="Email"></span><br/>
+            </div>
+            <button type="submit">Сохранить</button>
+        </form>
+        
+    </div>
+</div>
+
+@* запилить валидационные скрипты *@

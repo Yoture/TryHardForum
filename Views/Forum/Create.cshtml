@@ -1,0 +1,30 @@
+@model ForumCreateModel
+
+<div>
+    <div>
+        <div>
+            Создание нового форума
+        </div>
+    </div>
+    <div>
+        <div>
+            <form
+                asp-route-returnUrl="@ViewBag.ReturnUrl"
+                method="post">
+                <div asp-validation-summary="All"></div>
+                <input type="hidden" asp-for="AuthorId" />
+                <div>
+                    <label asp-for="Title">Заголовок</label>
+                    <input asp-for="Title" placeholder="Выберите заголовок для форума" />
+                    <span asp-validation-for="Title"></span>
+                </div>
+                <div>
+                    <label asp-for="Description">Описание</label>
+                    <input asp-for="Description" placeholder="Краткое описание писать тут..." />
+                    <span asp-validation-for="Description"></span>
+                </div>
+                <button type="submit">Создать</button>
+            </form>
+        </div>
+    </div>
+</div>

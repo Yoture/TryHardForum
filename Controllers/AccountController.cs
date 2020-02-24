@@ -1,270 +1,331 @@
+using System;
+using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using TryHardForum.Models;
-using TryHardForum.Models.ViewModels;
-using TryHardForum.Data;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using TryHardForum.Services;
+using TryHardForum.ViewModels.Account;
+using TryHardForum.ViewModels.Email;
 
 namespace TryHardForum.Controllers
 {
+    [Authorize]
     public class AccountController : Controller
     {
-        // Через этот объект можно запрашивать данные пользователей для дальнейшей работы с ними
-        private UserManager<AppUser> _userManager;
+        private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
-        // Валидация пользователя?
-        private readonly IUserValidator<AppUser> _userValidator;
-        // Валидация пароля?
-        private readonly IPasswordValidator<AppUser> _passwordValidator;
-        // Переменная для хеширования пароля?
-        private readonly IPasswordHasher<AppUser> _passwordHasher;
+        private readonly ILogger _logger;
+        private readonly IEmailSender _emailSender;
+        private readonly IConfiguration _configuration;
         
-        // Осуществляется взаимодействие с хранилищем через интерфейс
-        // Хранилище же взаимодействует с классом контекста
-        // Однако у меня пока что репозиторий не используется, т.е. новые пользователи в него не вносятся
-        private AppUserDbContext _userContext;
-
         public AccountController(UserManager<AppUser> userManager,
-                IUserValidator<AppUser> userValid,
-                IPasswordValidator<AppUser> passValid,
-                IPasswordHasher<AppUser> passwordHash,
-                AppUserDbContext userContext,
-                SignInManager<AppUser> signInManager)
+                SignInManager<AppUser> signInManager,
+                ILogger<AccountController> logger,
+                IEmailSender emailSender,
+                IConfiguration configuration)
         {
             _userManager = userManager;
-            _userValidator = userValid;
-            _passwordValidator = passValid;
-            _passwordHasher = passwordHash;
-            _userContext = userContext;
             _signInManager = signInManager;
+            _logger = logger;
+            _emailSender = emailSender;
+            _configuration = configuration;
         }
         
-        // переписать
-        // public ViewResult Index() => View(_userManager.Users);
-
+        // Вход в УЗ
         [HttpGet]
-        public ViewResult Index() => View();
-
-
-        [HttpGet]
-        public ViewResult Register() => View();
-    
-        [HttpPost]
         [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public IActionResult Login()
         {
-            if (ModelState.IsValid) 
-            {
-                // Создание объекта AppUser с внесением данных в поля UserName и Email
-                AppUser user = new AppUser { UserName = model.UserName, Email = model.Email };
-                
-                // Иртересуют детали работы метода CreateAsync
-                IdentityResult result = await _userManager.CreateAsync(user, model.Password);
-                
-                if (result.Succeeded)
-                {
-                    // В случае успеха осуществляется вход в эту УЗ без создания куки.
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
-                }
-                else
-                {
-                    // В случае неудачи будут выведены все ошибки, которые были допущены.
-                    foreach (IdentityError error in result.Errors)
-                    {
-                        ModelState.AddModelError("", error.Description);
-                    }    
-                }
-            }
+            ViewBag.ReturnUrl = Request.Headers["Referer"];
             return View();
         }
 
-        // Редактирует имя пользователя (за исключением пароля)
-        [HttpGet]
-        public async Task<IActionResult> Edit(string id) 
-        {
-            // Отображение почты пользователя через ViewBag мне кажется сейчас простым костылём.
-            AppUser user = await _userManager.FindByIdAsync(id);
-
-            if (user == null) 
-            {
-                return NotFound();
-            }
-
-            EditViewModel model = new EditViewModel
-            {
-                Id = user.Id,
-                Email = user.Email,
-                UserName = user.UserName
-            };
-
-            return View(model);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Edit(EditViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                AppUser user = await _userManager.FindByIdAsync(model.Id);
-        
-                if (user != null)
-                {
-                    user.UserName = model.UserName;
-            
-                    // Какой тип данных?
-                    IdentityResult result = await _userManager.UpdateAsync(user);
-            
-                    if (result.Succeeded)
-                    {
-                        // Перенаправление на страницу УЗ?
-                        return RedirectToAction("Index");
-                    }
-                    else
-                    {
-                        foreach (IdentityError error in result.Errors)
-                        {
-                            ModelState.AddModelError("", error.Description);
-                        }
-                    }
-                }
-            }
-            return View(model);
-        }
-
-        // GET-метод
-        public async Task<IActionResult> ChangePassword(string id)
-        {
-            AppUser user = await _userManager.FindByIdAsync(id);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-            ChangePasswordViewModel model = new ChangePasswordViewModel { Id = user.Id, Email = user.Email };
-            return View(model);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                AppUser user = await _userManager.GetUserAsync(User);
-        
-                if (user == null)
-                {
-                    return RedirectToAction(nameof(Login));
-                }
-
-                IdentityResult result = 
-                    await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
-                
-                if (!result.Succeeded)
-                {
-                    foreach (IdentityError error in result.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error.Description);
-                    }
-                    return View();
-                }
-
-                await _signInManager.RefreshSignInAsync(user);
-                return View("ChangePasswordConfirmation");
-            }
-            return View(model);
-        }
-
-        // Удаление УЗ
-        [HttpPost]
-        public async Task<IActionResult> Delete(string id) 
-        {
-            AppUser user = await _userManager.FindByIdAsync(id);
-            if (user != null) 
-            {
-                IdentityResult result = await _userManager.DeleteAsync(user);
-                if (result.Succeeded) 
-                {
-                    return RedirectToAction("Index", "Home");
-                } 
-                else 
-                {
-                    AddErrorsFromResult(result);
-                }
-            } 
-            else 
-            {
-                ModelState.AddModelError("", "User Not Found");
-            }
-            return View(nameof(Index));
-        }
-
-        // Вспомогательный метод для метода удаления УЗ
-        private void AddErrorsFromResult(IdentityResult result) 
-        {
-            foreach (IdentityError error in result.Errors) 
-            {
-                ModelState.AddModelError("", error.Description);
-            }
-        }
-
-        // Вход
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult Login(string returnUrl = null) 
-        {
-            return View(new LoginViewModel { ReturnUrl = returnUrl });
-        }
-
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task <IActionResult> Login(LoginViewModel model, string returnUrl) 
+        public async Task<IActionResult> Login(LoginModel model, string returnUrl)
         {
+            ViewBag.ReturnUrl = returnUrl;
             if (ModelState.IsValid)
             {
                 AppUser user = await _userManager.FindByEmailAsync(model.Email);
-
+                // Если пользователь найден, то он автоматически выходит.
                 if (user != null)
                 {
-                    await _signInManager.SignOutAsync();
-                    Microsoft.AspNetCore.Identity.SignInResult result =
-                        await _signInManager.PasswordSignInAsync(user, model.Password, false, false);
-
+                    // Переменная, реализующая механизм входа пользователя.
+                    var result = await _signInManager.PasswordSignInAsync(
+                        user, 
+                        model.Password, 
+                        isPersistent: false,
+                        lockoutOnFailure: false);
+                    
+                    // если result благополучно выполняется, значит пользователь входит
+                    // Это действие отмечается в логах, и приложение перенаправляет пользователя.
                     if (result.Succeeded)
                     {
-                        return Redirect(returnUrl ?? "/");
+                        _logger.LogInformation(1, "User logged in.");
+                        return Redirect(returnUrl);
                     }
-                }
-                else
-                {
-                    ModelState.AddModelError(nameof(LoginViewModel.Email),
-                        "Неверный пользователь или пароль");
+                    
+                    // В случае, если пользователь заблокирован
+                    if (result.IsLockedOut)
+                    {
+                        _logger.LogWarning(2, "Учётная запись пользователя заблокирована.");
+                        return View("Lockout");
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Неудачная попытка входа.");
+                        return View(model);
+                    }
                 }
             }
             return View(model);
         }
 
-        [Authorize]
+        // Выход из УЗ пользователя.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            // Удаление аутентификационных куки.
             await _signInManager.SignOutAsync();
+            _logger.LogInformation(4, "User logged out.");
             return RedirectToAction("Index", "Home");
         }
 
+        // Регистрация новых пользователей
+        [HttpGet]
         [AllowAnonymous]
+        public IActionResult Register()
+        {
+            return View();
+        }
+        
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = new AppUser
+                {
+                    UserName = model.UserName,
+                    Email = model.Email.ToLower(),
+                    MemberSince = DateTime.Now
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (result.Succeeded)
+                {
+                    // Генерация токена подтверждения электронной почты для пользователя.
+                    var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+
+                    // Генерация обратного URL при нажатии ссылки подтверждения почты.
+                    var confirmationLink = Url.Action("ConfirmEmail", "Account", 
+                        new { userId = user.Id, code = token }, protocol: Request.Scheme);
+
+                    string content = "<p>Чтобы подтвердить свою УЗ пройди по ссылке далее: <a href=\"" 
+                                     + confirmationLink + "\">link</a>";
+
+                    // Создаю новый объект, который затем передаю на отправку.
+                    var details = new SendEmailDetails
+                    {
+                        IsHtml = true,
+                        FromName = _configuration["EmailSettings:EmailAuthor"],
+                        FromEmail = _configuration["EmailSettings:EmailAddress"],
+                        ToName = user.UserName,
+                        ToEmail = user.Email,
+                        Subject = "Подтверждение адреса электронной почты",
+                        Content = content
+                    };
+                    
+                    // Отправка письма пользователю со встроенной обратной ссылкой (URL)
+                    await _emailSender.SendEmailAsync(details);
+
+                    _logger.LogInformation(3, "User created a new account with password.");
+                    // TODO: Поместить сообщение о необходимости подтверждения адреса электронной почты
+                    
+                    // После регистрации пользователя, происходит перенаправление на страницу Error.cshtml
+                    TempData["Message"] = "Регистрация прошла успешно! " +
+                                          "На указанный вами адрес электронной почты выслано письмо с подтверждением." +
+                                          "Рекомендуем перед использованием учётной записи пройти процедуру подтверждения.";
+                    return RedirectToAction("Index", "Home");
+                }
+                // 
+                AddErrors(result);
+            }
+            return View(model);
+        }
+
+        // Подтверждение адреса электронной почты.
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(string userId, string code)
+        {
+            // code генерируется при регистрации новой УЗ пользователя. Фактически это токен.
+            if (userId == null || code == null)
+            {
+                return RedirectToPage("Error");
+            }
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return RedirectToPage("Error");
+            }
+            // Если подтверждение успешно, то пользователь перенаправляется на
+            // страницу подтверждения.
+            var result = await _userManager.ConfirmEmailAsync(user, code);
+            return View(result.Succeeded ? "ConfirmEmail" : "Error");
+        }
+
+
+        // Восстановление забытого пароля.
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+        
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // Поиск пользователя по указанному почтовому адресу.
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                
+                if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+                {
+                    // Не отобразится, если пользователь не найден или его почта не подтверждена.
+                    return View("ForgotPasswordConfirmation");
+                }
+                
+                // Генерирует токен восстановления и обратный адрес.
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                // Кодировка токена перед помещением его в ссылку.
+                token = HttpUtility.HtmlEncode(token);
+                
+                // Указывается метод, на который будет ссылка.
+                // ранее был userId = user.Id. В этой модели отсутствует Id, так что решение должно быть верным.
+                var passwordResetLink = 
+                    Url.Action("ResetPassword", "Account", 
+                        new { email = user.Email,  token }, protocol: Request.Scheme);
+                
+                var content = "<p>Чтобы сбросить пароль пройди по ссылке далее: <a href=\"" 
+                              + passwordResetLink + "\">link</a>";
+
+                // Создаю новый объект, который затем передаю на отправку.
+                var details = new SendEmailDetails
+                {
+                    IsHtml = true,
+                    FromName = _configuration["EmailSettings:EmailAuthor"],
+                    FromEmail = _configuration["EmailSettings:EmailAddress"],
+                    ToName = user.UserName,
+                    ToEmail = user.Email,
+                    Subject = "Восстановление пароля",
+                    Content = content
+                };
+                
+                // Осуществляет отправку письма с обратным адресом пользователю.
+                await _emailSender.SendEmailAsync(details);
+                return View("ForgotPasswordConfirmation");
+            }
+            return View(model);
+        }
+        
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        // Сброс пароля
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            if (token == null || email == null)
+            {
+                RedirectToAction("Error", "Home");
+            }
+
+            return View();
+        }
+        
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            
+            // Декодировка токена (он был закодирован в ForgotPassword()).
+            var token = HttpUtility.HtmlDecode(model.Token);
+
+            var result = await _userManager.ResetPasswordAsync(user, token: token, model.NewPassword);
+            
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            
+            if (user == null)
+            {
+                // По-хорошему тут должно быть перенаправление на Home.Error, или что-то в этом роде...
+                return View("ResetPasswordConfirmation");
+            }
+            
+            if (result.Succeeded)
+            {
+                return View("ResetPasswordConfirmation");
+            }
+            AddErrors(result);
+            return View(model);
+        }
+        
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
+        }
+        
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult Lockout()
+        {
+            return View();
+        }
+        
+        [HttpGet]
         public IActionResult AccessDenied()
         {
             return View();
         }
+
+        #region Helpers
+
+        private void AddErrors(IdentityResult result)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+
+        #endregion
     }
 }

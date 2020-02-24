@@ -1,24 +1,56 @@
-@inject SignInManager<AppUser> SignInManager
-@inject UserManager<AppUser> UserManager
+@model HomeIndexModel
 
-@{
-    ViewBag.Title = "Home Page";
-}
-
-<p>Главная страница</p>
-
-<!--
-@if (User.Identity.IsAuthenticated)
-{
-    <p>@User.Identity.Name</p>
-
-    <form method="post" asp-controller="Account" asp-action="Logout">
-        <input type="submit" value="Выход" />
-    </form>
-}
-else
-{
-    <a asp-controller="Account" asp-action="Login">Вход</a>
-    <a asp-controller="Account" asp-action="Register">Регистрация</a>
-}
--->
+<p>Временная затычка для Home.Index</p>
+@*
+<div>
+    <div>
+        <div>
+            <!-- Сообщения принимаемые даже из других контроллеров. -->
+            @TempData["Message"]
+            <div>Какой-нибудь глубокомысленный слоган</div>
+            <p>Краткое описание форума</p>
+        </div>
+        <div></div>
+    </div>
+    <div>
+        <h3>Последние сообщения</h3>
+        <table>
+            <tbody>
+                @foreach (var post in Model.LatestPosts)
+                {
+                    <tr>
+                        <td>
+                            <div>
+                                <a asp-controller="Post" asp-action="Index" asp-route-id="@post.Id">
+                                    @post.Title
+                                </a>
+                            </div>
+                            <div>
+                                @if(post.RepliesCount == 1)
+                                {
+                                    <span>@post.RepliesCount Ответ</span>
+                                }
+                                @if(post.RepliesCount == 0)
+                                {
+                                    <span>Нет ответов</span>
+                                }
+                                else
+                                {
+                                    <span>@post.RepliesCount Ответов</span>
+                                }
+                                <span class="postUser">
+                                    <a asp-controller="Profile"
+                                       asp-action="Details"
+                                       asp-route-id="@post.AuthorId">
+                                        @post.AuthorName
+                                    </a>
+                                </span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+*@

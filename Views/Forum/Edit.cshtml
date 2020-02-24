@@ -1,0 +1,25 @@
+@model ForumEditModel
+@{
+    ViewData["Title"] = "Редактировать форум";
+}
+
+<h4>@ViewData["Title"]</h4>
+<div>
+    <div>
+        <form asp-route-returnUrl="@ViewBag.ReturnUrl" method="post">
+            <div asp-validation-summary="ModelOnly"></div>
+            <input type="hidden" asp-for="@Model.Id" />
+            <div>
+                <label asp-for="@Model.Title">Заголовок</label>
+                <input asp-for="@Model.Title" />
+            </div><br/>
+            <div>
+                <label asp-for="@Model.Description">Описание</label>
+                <input asp-for="@Model.Description" />
+            </div><br/>
+            <button type="submit">Сохранить</button>
+        </form>
+    </div>
+</div>
+
+@* запилить валидационные скрипты *@

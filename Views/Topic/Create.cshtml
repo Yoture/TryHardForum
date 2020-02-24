@@ -1,0 +1,34 @@
+@model TopicCreateModel
+
+<div>
+    <div>
+        <div>
+            Создание нового форума
+        </div>
+    </div>
+    <div>
+        <div>
+            <form asp-route-returnUrl="@TempData["ReturnUrl"]" method="post">
+                <div asp-validation-summary="All"></div>
+                <input type="hidden" name="returnUrl" value="@TempData["returnUrl"]" />
+                <input type="hidden" asp-for="ForumId" />
+                <input type="hidden" asp-for="AuthorId" />
+                <div>
+                    <label asp-for="Title">Заголовок</label>
+                    <input asp-for="Title" placeholder="Выберите заголовок для форума" />
+                    <span asp-validation-for="Title"></span>
+                </div>
+                <!--
+                Описание должно быть создано отдельно! А значит что тут должен быть гибрид создания
+                форума и сообщения.
+                -->
+                <div>
+                    <label asp-for="Description">Описание</label>
+                    <textarea asp-for="Description" rows="20" placeholder="Первое сообщение писать тут..."></textarea>
+                    <span asp-validation-for="Description"></span>
+                </div>
+                <button type="submit">Создать</button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,17 @@
+@model DeleteUserModel
+
+@{
+    Layout = "_AccountLayout";
+    ViewBag.Title = "Удаление учётной записи";
+}
+
+<div>
+    <h1>Уважаемый @Model.Name!</h1>
+    <p>Удаление вашей учётной записи не позволит восстановить её в дальнейшем.</p>
+    <p>Вы уверены, что хотите безвозвратно удалить свою учётную запись?</p>
+    <form asp-action="DeleteConfirmation" asp-route-id="@Model.Id" method="post">
+        <button type="submit">
+            Удалить учётную запись
+        </button>
+    </form>
+</div>

@@ -1,42 +1,47 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using TryHardForum.Models;
 using TryHardForum.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Npgsql;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using TryHardForum.Extensions;
+using TryHardForum.Services;
 
 namespace TryHardForum
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration config) 
         {
             Configuration = config;
         }
-
-        public IConfiguration Configuration { get; }
+      
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         
         public void ConfigureServices(IServiceCollection services)
         {
             // Строка подключения к БД с УЗ пользователей
-            string identityConString = Configuration.GetConnectionString("IdentityConnection");
+            var identityConString = Configuration.GetConnectionString("IdentityConnection");
+
+            // Строка подключения к БД с данными приложения (за исключением данных пользователей).
+            var dataConString = Configuration.GetConnectionString("DataConnection");
+
             // Подключение к БД Identity через EFCore с использованием поставщика БД Npgsql.
             services.AddEntityFrameworkNpgsql()
                 .AddDbContext<AppUserDbContext>(options =>
                     options.UseNpgsql(identityConString));
+
+            // Подключение БД с данными приложения (за исключением данных пользователей).
+            services.AddEntityFrameworkNpgsql()
+                .AddDbContext<AppDataDbContext>(options =>
+                    options.UseNpgsql(dataConString));
 
             // Установка проверки куки на валидность каждую секунду
             services.Configure<SecurityStampValidatorOptions>(options =>
@@ -71,16 +76,37 @@ namespace TryHardForum
             }).AddEntityFrameworkStores<AppUserDbContext>()
                 .AddDefaultTokenProviders();
 
-            // Регистрация хранилища
-            // services.AddTransient<IAppUserRepository, AppUserRepository>();
-            services.AddControllersWithViews();
+            services.AddScoped<IForumRepository, ForumRepository>();
+            services.AddScoped<IPostRepository, PostRepository>();
+            services.AddScoped<IAppUserRepository, AppUserRepository>();
+            services.AddScoped<ITopicRepository, TopicRepository>();
+            services.AddScoped<IUploadService, UploadService>();
+            services.AddSingleton(Configuration);
+            
+            // Как работает этот код?
+            services.Configure<AuthMessageSenderOptions>(Configuration);
+            
+            // Внедрение SendGrid
+            services.AddSendGridEmailSender();
+            
+            // Внедрение темплейтов SendGrid
+            services.AddEmailTemplateSender();
+
+            // Сид базы УЗ админа.
+            services.AddTransient<DataSeeder>();
+
+            // Используется вместо AddMvc().
+            services.AddControllersWithViews().AddRazorRuntimeCompilation();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DataSeeder dataSeeder)
         {
             app.UseStatusCodePages();
             app.UseDeveloperExceptionPage();
+
+            dataSeeder.SeedSuperUser();
+            
             app.UseStaticFiles();
             
             // Маршрутизация на основе конечных точек (Endpoints)
@@ -95,16 +121,25 @@ namespace TryHardForum
             // Авторизация отвечает на вопрос, какие права в системе имеет пользователь
             // (если короче, то "are you allowed?")
             app.UseAuthorization();
-
+            
+            
             app.UseEndpoints(endpoints =>
             {
+                // Стандартный путь.
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}"
+                    pattern: "{controller}/{action}/{id?}",
+                    defaults: new { controller = "Home", action = "Index" }
                 );
+                
+                // Маршрутизация по областям.
+                // endpoints.MapAreaControllerRoute(
+                //     name: "areas",
+                //     areaName: "areas",
+                //     pattern: "{area}/{controller}/{action}/{id?}",
+                //     defaults: new { controller = "Home", action = "Index" }
+                // );
             });
-
-            
         }
     }
 }

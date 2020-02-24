@@ -1,0 +1,70 @@
+@model ForumDetailsModel
+
+<div>
+    <div>
+        <div>
+            Обзор тем форума
+        </div>
+        <div>
+            @Model.ForumTitle
+        </div>
+        <div>
+            @Model.ForumDescription
+        </div>
+    </div>
+    <div>
+        <a asp-controller="Topic" asp-action="Create" asp-route-id="@Model.ForumId">Создать новую тему</a>
+    </div>
+    <div class="row">
+        <tbody>
+        @if (Model.TopicList.Equals(null))
+        {
+            <p>Тут пока что нет тем</p>
+        }
+        else
+        {
+            @foreach (var topic in Model.TopicList)
+            {
+                <tr>
+                    <td>
+                        <div>
+                            <a asp-controller="Topic" asp-action="Index" asp-route-id="@topic.Id">@topic.Title</a>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            @topic.Description
+                        </div>
+                    </td>
+                    <td>
+                        @topic.Created
+                    </td>
+                    <td>
+                        @topic.AuthorName
+                    </td>
+                    <td>
+                        @topic.LatestPost.Created
+                    </td>
+                    <td>
+                        @topic.LatestPost.AppUser.UserName
+                    </td>
+                    <!-- Если пользователь является администратором, или ID пользователя совпадает с ID создавшего тему -->
+                    @* @if (User.IsInRole("Admin") || topic.AuthorId == userId)
+                { *@
+                    <td>
+                        <div>
+                            <a asp-controller="Topic" asp-action="Edit" asp-route-id="@topic.Id">Редактировать</a>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <a asp-controller="Topic" asp-action="Delete" asp-route-id="@topic.Id">Удалить</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </div>
+</div>
+

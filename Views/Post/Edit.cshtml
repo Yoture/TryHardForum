@@ -1,0 +1,23 @@
+@model EditPostModel
+<!-- Должно быть частичным представлением -->
+
+<div>
+    <div>
+        <div>Новое сообщение</div>
+        <div>
+            <p>
+                Какое-нибудь предостережение перед созданием очередного сообщения.
+
+                @if (!Context.User.Identity.IsAuthenticated)
+                {
+                    <span>Вы должны быть 
+                        <a asp-controller="Account" asp-action="Register">
+                            зарегистрированным пользователем
+                        </a> 
+                        для создания нового сообщения.
+                    </span>
+                }
+            </p>
+        </div>
+    </div>
+</div>

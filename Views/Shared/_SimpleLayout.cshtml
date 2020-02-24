@@ -1,0 +1,70 @@
+@inject UserManager<AppUser> UserManager
+@inject SignInManager<AppUser> SignInManager
+
+<!DOCTYPE html>
+<html lang="ru">
+
+@*
+    В голове проекта должны находиться разнообразные настройки для работы со страницей.
+    Получается, что логотип проекта фактически будет находиться в навигационной панели и олицетворяет собой
+    кнопку "Домой". 
+*@
+
+<head>
+    @* Сюда можно добавить шрифты от Google Fonts. *@
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - TryHardForum</title>
+    
+    <!-- Подключение стилей -->
+    <environment include="Development">
+        <link rel="stylesheet" />
+    </environment>
+    <environment exclude="Development">
+        <link rel="stylesheet" asp-append-version="true" />
+    </environment>
+</head>
+<body>
+    <nav>
+        <div>
+            <div>
+                <a asp-controller="Home" asp-action="Index">TryHardForum</a>
+            </div>
+            <div>
+                @if(SignInManager.IsSignedIn(User))
+                {
+                    <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
+                        <ul>
+                            <li>
+                                <a asp-controller="Manage"
+                                   asp-action="Index"
+                                   title="Manage"
+                                   asp-route-id="@UserManager.GetUserId(User)">
+                                    @UserManager.GetUserName(User)
+                                </a>
+                            </li>
+                            <li>
+                                <button type="submit">
+                                    Выйти
+                                </button>
+                            </li>
+                        </ul>
+                    </form>
+                }
+            </div>
+        </div>
+    </nav>
+    @RenderBody()
+<environment include="Development">
+        @* Расположить ссылки на JS скрипты для дев окружения *@
+    </environment>
+    <environment exclude="Development">
+        @*
+            Расположить ссылки на JS скрипты, не касающиеся дев. окружения.
+            Также тут располагаются фоллбэки, ссылки на CDN и т.д.
+        *@
+    </environment>
+    @* Подключение необязательных скриптов. *@
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

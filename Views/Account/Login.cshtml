@@ -1,21 +1,57 @@
-@model LoginViewModel
+@model LoginModel
+@inject SignInManager<AppUser> SignInManager
 
 @{
-    ViewBag.Title = "Вход";
+    Layout = "_SimpleLayout";
 }
 
-<div asp-validation-summary="All"></div>
+<div>
+    <div>
+        <h1>Вход в учётную запись пользователя</h1>
+        <div>
+            <p>Войдите под своей учётной записью чтобы оставлять сообщения на форумах.</p>
+        </div>
+    </div>
+    <div>
+        <div>
+            <form asp-route-returnUrl="@ViewBag.ReturnUrl" method="post">
+                <div asp-validation-summary="ModelOnly"></div>
+                <div>
+                    <label asp-for="Email">Адрес электронной почты</label>
+                    <input asp-for="Email" />
+                    <span asp-validation-for="Email"></span>
+                </div>
+                <div>
+                    <label asp-for="Password">Пароль</label>
+                    <input asp-for="Password" />
+                    <span asp-validation-for="Password"></span>
+                </div>
+                <div>
+                    <div>
+                        <label asp-for="RememberMe">
+                            <input asp-for="RememberMe" />
+                            @Html.DisplayNameFor(m => m.RememberMe)
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Войти</button>
+                </div>
+                <div>
+                    <p>
+                        <a asp-action="ForgotPassword" asp-route-returnUrl="@ViewData["ReturnUrl"]">Забыли пароль?</a>
+                    </p>
+                    <p>
+                        <a asp-action="Register" asp-route-returnUrl="@ViewData["ReturnUrl"]">Зарегистрироваться как новый пользователь?</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-<form method="post" asp-controller = "Account" asp-action="Login">
-    <input type="hidden" name="returnUrl" value="@ViewBag.returnUrl" />
-    <div>
-        <label asp-for="Email"></label>
-        <input asp-for="Email" />
-        <span asp-validation-for = "Email"></span>
-    </div>
-    <div>
-        <label asp-for="Password"></label>
-        <input asp-for="Password" />
-    </div>
-    <button type="submit">Войти</button>
-</form>
+@*
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
+*@
